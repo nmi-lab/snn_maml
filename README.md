@@ -22,9 +22,11 @@ This repository has been modified from pytorch-maml (https://github.com/tristand
 
 # Usage
 
-## Notes for setup on PGI15 computers
-The datasets are already downloaded and available from at /Data/pgi-15/datasets
-The existing symlink in the repository should point to that directory
+## Notes for setup and data acquisition
+
+The datasets for Double NMNIST, Double ASL-DVS, and N-Omniglot as detailed in the paper are obtainable and created with the torchneuromorphic repository linked here:
+https://github.com/kennetms/torchneuromorphic
+
 
 ## Basic Usage for MAML ANN
 ```
