@@ -1,6 +1,6 @@
 If you use or adopt any of the work presented in this repository, please cite our work as follows:
 
-'''
+```
 @article{Stewart_2022,
 doi = {10.1088/2634-4386/ac8828},
 url = {https://dx.doi.org/10.1088/2634-4386/ac8828},
@@ -12,9 +12,9 @@ number = {4},
 pages = {044002},
 author = {Kenneth M Stewart and Emre O Neftci},
 title = {Meta-learning spiking neural networks with surrogate gradient descent},
-journal = {Neuromorphic Computing and Engineering },
+journal = {Neuromorphic Computing and Engineering }
 }
-'''
+```
 
 # Introduction
 
