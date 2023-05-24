@@ -1,0 +1,56 @@
+Nhid:
+- 12
+- 30
+- 30
+Mhid: []
+alpha:
+- 0.97
+alpharp:
+- 0.65
+batch_size: 72
+beta:
+- 0.92
+betas:
+- 0.
+- 0.95
+burnin_steps: 100
+chunk_size_test: 1800
+chunk_size_train: 500
+dataset: create_dvsgestures_attn
+deltat: 1000
+input_shape:
+- 2
+- 32
+- 32
+kernel_size:
+- 5
+lc_ampl: 0.5
+learning_rate: 1.2e-4
+learning_method: 'bptt'
+loss: smoothL1
+loss_scope: 'bptt'
+lr_drop_factor: 2
+lr_drop_interval: 30
+num_epochs: 1000
+num_conv_layers: 3
+num_mlp_layers: 0
+num_layers: 3
+num_dl_workers: 4
+optimizer: adamax
+out_channels: 10
+online_update: False
+pool_size:
+- 2
+- 1
+- 2
+random_tau: false
+reg_l:
+- .0
+- .0
+- .0
+- .0
+stride:
+- 2
+- 1
+- 1
+test_interval: 1

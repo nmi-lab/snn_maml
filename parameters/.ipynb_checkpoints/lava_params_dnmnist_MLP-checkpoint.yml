@@ -1,0 +1,20 @@
+neuron_model: {threshold     : 1.0, #1.25,
+current_decay : 0.1, #0.3, #.5, good #0.25, # = 4096*current_decay
+voltage_decay : 0.05, #.2, #0.75, # = 4096*voltage_decay
+tau_grad      : 0.05, # depends on how frequently layers spike, lots of activity then make softer surrogate function, less activity expand. Look at magnitude norm of the gradient to the previous layer, make sure they're not exploding or vanishing. look at grad flow function
+scale_grad    : 5., #3
+requires_grad : False,
+quantize: True} #True,}
+network: {chunk_size_test: 100, #1800
+chunk_size_train: 100, #500
+benchmark: doublenmnist_torchmeta,
+deltat: 1000,
+input_shape: [2, 32,16],
+Nhid: [],
+Mhid: [512, 512],
+kernel_size: [5,5,5,1],
+pool_size: [2,2,2,1],
+stride: [1,1,1,1],
+out_channels: 5,
+analog_readout: False,
+delay: False}

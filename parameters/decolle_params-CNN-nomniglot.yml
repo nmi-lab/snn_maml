@@ -1,0 +1,65 @@
+Nhid:
+- 32
+- 64
+- 128
+Mhid: []
+alpha:
+- 0.95
+alpharp:
+- 0.65
+batch_size: -1 #not used
+beta:
+- 0.9
+betas:
+- 0.
+- 0.95
+burnin_steps: 70
+chunk_size_test: 100 #1800
+chunk_size_train: 100 #500
+benchmark: nomniglotsequence
+deltat: 30000
+input_shape:
+- 2
+- 34
+- 26
+kernel_size:
+- 5
+- 5
+- 5
+- 1
+lc_ampl: 0.5
+learning_rate: 1.2e-3
+learning_method: 'bptt'
+loss: smoothL1
+loss_scope: 'bptt'
+lr_drop_factor: 2
+lr_drop_interval: 30
+num_epochs: 1000
+num_conv_layers: 3
+num_mlp_layers: 0
+num_layers: 4
+num_dl_workers: 3
+optimizer: adamax
+out_channels: 5
+online_update: False
+act_rate: 0.288
+pool_size:
+- 2
+- 2
+- 2
+- 1
+dropout:
+- 0
+random_tau: false
+reg_l:
+- .0
+- .0
+- .0
+- .0
+stride:
+- 1
+- 1
+- 1
+- 1
+test_interval: 1
+wrp: 1.0
