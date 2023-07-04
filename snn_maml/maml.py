@@ -9,6 +9,10 @@ from .utils import tensors_to_device, compute_accuracy
 
 __all__ = ['ModelAgnosticMetaLearning', 'MAML', 'FOMAML']
 
+from tensorboardX import SummaryWriter
+
+import pdb
+
 # default `log_dir` is "runs" - we'll be more specific here
 
 def batch_one_hot(targets, num_classes=10):
@@ -124,7 +128,7 @@ class ModelAgnosticMetaLearning(object):
                     group.setdefault('initial_lr', group['lr'])
                 #self.scheduler.base_lrs([group['initial_lr'] for group in self.optimizer.param_groups])
 
-    def get_outer_loss(self, batch, hard_clamp = False):
+    def get_outer_loss(self, batch):
         if 'test' not in batch:
             raise RuntimeError('The batch does not contain any test dataset.')
 
@@ -149,11 +153,13 @@ class ModelAgnosticMetaLearning(object):
         for task_id, (train_inputs, train_targets, test_inputs, test_targets) \
                 in enumerate(zip(*batch['train'], *batch['test'])):
             
+           # print("INPUT SHAPE", train_inputs.shape)
+            
             params, adaptation_results = self.adapt(
                 train_inputs, train_targets,
                 is_classification_task=is_classification_task,
                 num_adaptation_steps=self.num_adaptation_steps,
-                step_size=self.step_size, first_order=self.first_order, hard_clamp=hard_clamp)
+                step_size=self.step_size, first_order=self.first_order)
 
             results['inner_losses'][:, task_id] = adaptation_results['inner_losses']
             
@@ -162,10 +168,7 @@ class ModelAgnosticMetaLearning(object):
 
             with torch.set_grad_enabled(self.model.training):
                 test_logits = self.model(test_inputs, params=params)
-                if self.loss_function is F.mse_loss:
-                    outer_loss = self.loss_function(test_logits, batch_one_hot(test_targets, test_logits.shape[1]).cuda()) 
-                else:
-                    outer_loss = self.loss_function(test_logits, test_targets)
+                outer_loss = self.loss_function(test_logits, test_targets)
                     
                 results['outer_losses'][task_id] = outer_loss.item()
                 mean_outer_loss += outer_loss
@@ -182,7 +185,7 @@ class ModelAgnosticMetaLearning(object):
     
     #Inner loop
     def adapt(self, inputs, targets, is_classification_task=None,
-              num_adaptation_steps=1, step_size=0.1, first_order=False, **kwargs):
+              num_adaptation_steps=1, step_size=0.1, first_order=False):
         if is_classification_task is None:
             is_classification_task = (not targets.dtype.is_floating_point)
             
@@ -196,11 +199,10 @@ class ModelAgnosticMetaLearning(object):
         for step in range(num_adaptation_steps):
             
             logits = self.model(inputs, params=params)
-            if self.loss_function == F.mse_loss:
-                inner_loss = self.loss_function(logits, batch_one_hot(targets, logits.shape[1]).cuda()) 
-            else:
-                inner_loss = self.loss_function(logits, targets)
+
+            inner_loss = self.loss_function(logits, targets)
             results['inner_losses'][step] = inner_loss.item()
+            #pdb.set_trace()
             if (step == num_adaptation_steps-1) and is_classification_task: 
                 results['accuracy_before'] = compute_accuracy(logits, targets)
 
@@ -211,8 +213,7 @@ class ModelAgnosticMetaLearning(object):
                                                 step_size=step_size,
                                                 params=params,
                                                 first_order=(not self.model.training) or first_order,
-                                                custom_update_fn = self.custom_inner_update_fn,
-                                                )
+                                                custom_update_fn = self.custom_inner_update_fn)
             
             if self.inner_loop_quantizer is not None:
                 params = quantize_parameters(params, self.inner_loop_quantizer)
@@ -256,7 +257,11 @@ class ModelAgnosticMetaLearning(object):
                 batch = tensors_to_device(batch, device=self.device)
                 outer_loss, results = self.get_outer_loss(batch)    
                 yield results
+                #pdb.set_trace()
                 outer_loss.backward()
+                #pdb.set_trace()
+                #self.model.grad_flow('./')
+                #pdb.set_trace()
                 if self.custom_outer_update_fn is not None:
                     self.custom_outer_update_fn(self.model)
 

@@ -1,5 +1,0 @@
-torch>=1.4.0
-torchmeta
-tqdm>=4.0.0
-torchneuromorphic
-decolle

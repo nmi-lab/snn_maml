@@ -93,6 +93,108 @@ def cross_entropy_gradient(S, targets):
     return S.grad
 
 
+
+def loihi_soel(model,
+               inputs,
+               target,
+               params=None,
+               step_size=.01,
+               first_order=False,
+               learning_engine=None):
+    
+    """
+        Update last layer with SOEL using Loihi Plasticity
+        
+        Parameters
+        ----------
+        model : `torchmeta.modules.MetaModule` instance
+                 The model.
+                 
+        logits: torch.tensor() float or int
+        The model output, can be sum of spikes, I've had most succes with that on non-meta
+        but voltage should be able to work to because the plasticity trys to spike like the 
+        loihi would and I would use those spikes but the spikes are based on the output so
+        may need to experiment to see what is best
+        
+        target: torch.tensor() int
+        Tensor containing the integer value of the target classe.
+        This indicates which neuron should be learning when.
+        Basically, zero grad non-target neurons
+                 
+        params : `collections.OrderedDict` instance, optional
+        Dictionary containing the meta-parameters of the model. If `None`, then
+        the values stored in `model.meta_named_parameters()` are used. This is
+        useful for running multiple steps of gradient descent as the inner-loop.
+
+        step_size : int, `torch.Tensor`, or `collections.OrderedDict` instance (default: 0.5)
+            The step size in the gradient update. If an `OrderedDict`, then the
+            keys must match the keys in `params`.
+
+        first_order : bool (default: `False`)
+            If `True`, then the first order approximation of MAML is used.
+            
+        learning_engine: LoihiPlasticity
+        Implements the learning rule using a model for loihi's plasticity processor
+
+        Returns
+        -------
+        updated_params : `collections.OrderedDict` instance
+            Dictionary containing the updated meta-parameters of the model, with one
+            gradient update wrt. the SOEL Loihi Plasticity learning rule weight updates
+    """
+    
+    # can only process one sample at a time? I guess so with how traces work
+    # maybe if I combine with sgd I can train whole nets with it?
+    
+    if params is None:
+        params = OrderedDict(model.meta_named_parameters())
+    
+    
+    #soel_grads = torch.zeros((model.blocks[-1].synapse.weight.shape[0], model.blocks[-1].synapse.weight.shape[1])).unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)
+    
+    #pdb.set_trace()
+    
+    
+    for inp in range(target.shape[0]):
+        with torch.no_grad(): # assuming only inner loop needed here (won't work in outer loop)
+            logits = model(inputs[inp].unsqueeze(0), params=params)
+        thresh = 0
+        for i in range(5): # this should simulate tEpoch=20 I think???? only works if time is 100, I've been using 100 but not flexible
+            #pdb.set_trace()
+            err = 10 - torch.sum(learning_engine.y[0][0][target[inp]].T[20*i:20*(i+1)].T,axis=-1)
+            #pdb.set_trace()
+            if err!=0 and ((err>thresh) or (err < -thresh)):
+                learning_engine.y[1][0][target[inp]][20*(i+1)-1] = 20+err if (20+err)>=0 else 0
+
+                thresh+=1 
+            else:
+                if thresh > 0:
+                    thresh-=1 
+                    
+    #pdb.set_trace()
+    learning_engine.apply() # applies the learning to update the weights based on grad values (traces)
+    
+        
+    #pdb.set_trace()
+    updated_params = OrderedDict()
+    
+    names = [name for name, param in params.items()]
+    for name, param in params.items():
+        #pdb.set_trace()
+        if name != names[-1]: 
+            updated_params[name] = param# - step_size * grad
+        else:
+            #pdb.set_trace()
+            updated_params[name] = param + step_size * model.blocks[-1].synapse.weight.grad
+            
+    #pdb.set_trace()
+    print(f"grads {model.blocks[-1].synapse.weight.grad.squeeze()}")
+    print(f"loihi quantized before: {model.blocks[-1].synapse.pre_hook_fx(params[name],descale=True).squeeze()}")
+    print(f"loihi quantized after: {model.blocks[-1].synapse.pre_hook_fx(updated_params[name],descale=True).squeeze()}")
+    #pdb.set_trace()
+    return updated_params
+
+
 def maml_soel(model,
                                U,
                                targets,
